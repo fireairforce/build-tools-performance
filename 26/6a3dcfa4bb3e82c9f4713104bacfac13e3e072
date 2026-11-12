@@ -1,0 +1,21 @@
+scripts/benchmark.ts
+  s_371450ac90b92f::t_f23e55716619f7 1-5,225,229,619-651,881
+package.json
+  s_371450ac90b92f::t_759cd30db5fb8f 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "266a3dcfa4bb3e82c9f4713104bacfac13e3e072",
+  "prompts": {},
+  "sessions": {
+    "s_371450ac90b92f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf11-36be-7d03-8f9a-adabee6e5b71",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "zoomdong <1344492820@qq.com>"
+    }
+  }
+}
