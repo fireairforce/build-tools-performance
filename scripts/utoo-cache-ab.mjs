@@ -30,6 +30,10 @@ const experiment = {
   warmupTimesPerBlock: Number(process.env.AB_WARMUP_TIMES ?? 1),
   runTimesPerBlock: Number(process.env.AB_RUN_TIMES ?? 3),
   cachePolicy: 'Each cold/warm pair starts with a fresh compiler cache.',
+  shutdownStrategy:
+    process.env.BENCHMARK_SINGLE_UTOO_SIGTERM === '1'
+      ? 'single SIGTERM to utoo server'
+      : 'original process-tree SIGTERM',
   baseline: 'f9adccb49b16e7aa23bc96441409b5da48b4c092',
 };
 writeFileSync(
@@ -159,6 +163,12 @@ try {
         acceptedAttempts.get(record.iteration) !== record.attempt
       )
         continue;
+      if (process.env.BENCHMARK_SINGLE_UTOO_SIGTERM === '1') {
+        if (record.exit.code !== 0 || record.exit.signal !== null)
+          throw new Error(`Utoo did not exit gracefully: ${file}`);
+        if (!record.diskCache?.files.some((file) => file.path.endsWith('.sst')))
+          throw new Error(`No persisted SST cache after shutdown: ${file}`);
+      }
       for (const metric of ['startupTime', 'serverReadyTime', 'pageReadyTime'])
         if (!Number.isFinite(record[metric]))
           throw new Error(`Invalid ${metric}: ${file}`);

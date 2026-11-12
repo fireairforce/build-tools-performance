@@ -1,9 +1,9 @@
-name: Utoo dev cache A/B
-run-name: Utoo dev cache A/B (${{ github.sha }})
+name: Utoo cache A/B with single SIGTERM
+run-name: Utoo cache A/B with single SIGTERM (${{ github.sha }})
 
 on:
   push:
-    branches: [zoomdong/utoo-dev-cache-mmap-ab]
+    branches: [zoomdong/utoo-dev-cache-shutdown-ab]
   workflow_dispatch:
 
 permissions:
@@ -26,6 +26,7 @@ jobs:
       AB_ORDER: ${{ matrix.order }}
       AB_WARMUP_TIMES: '1'
       AB_RUN_TIMES: '3'
+      BENCHMARK_SINGLE_UTOO_SIGTERM: '1'
 
     steps:
       - name: Checkout experiment

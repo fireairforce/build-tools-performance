@@ -105,6 +105,7 @@ interface Column {
 const COOL_DOWN_TIME = 1000;
 const devTimingOnly = process.env.BENCHMARK_DEV_TIMING_ONLY === '1';
 const diagnostics = process.env.BENCHMARK_DIAGNOSTICS === '1';
+const singleUtooSigterm = process.env.BENCHMARK_SINGLE_UTOO_SIGTERM === '1';
 const measurements: Measurement[] = devTimingOnly
   ? ['timing']
   : ['timing', 'memory'];
@@ -532,6 +533,7 @@ const metadata = {
   measurements,
   devTimingOnly,
   diagnostics,
+  singleUtooSigterm,
   persistenceMmap: process.env.TURBO_PERSISTENCE_MMAP ?? null,
   diagnosticEnvironment: Object.fromEntries(
     Object.entries(process.env).filter(([key]) =>
@@ -666,6 +668,23 @@ async function stopCommand(command: Command) {
     }
     const signal = async (name: NodeJS.Signals) => {
       const processes = await memorySampler.snapshot(rootPid);
+      if (name === 'SIGTERM' && singleUtooSigterm && processes.length) {
+        const rows = execFileSync(
+          'ps',
+          ['-p', processes.map(({ pid }) => pid).join(','), '-o', 'pid=,args='],
+          { encoding: 'utf8' },
+        );
+        const match = rows
+          .split('\n')
+          .map((row) => /^\s*(\d+)\s+utoopack-dev-server(?:\s|$)/.exec(row))
+          .find(Boolean);
+        if (!match)
+          throw new Error('Cannot find utoo dev server for single SIGTERM');
+        // Signal only the server. Signalling cross-env as well would forward a
+        // second SIGTERM after utoo removes its handler, interrupting the flush.
+        process.kill(Number(match[1]), name);
+        return;
+      }
       for (const { pid } of processes.reverse()) {
         try {
           process.kill(pid, name);
