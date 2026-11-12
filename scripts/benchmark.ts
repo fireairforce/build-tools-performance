@@ -1,8 +1,4 @@
-import {
-  execFileSync,
-  spawn,
-  type ChildProcess,
-} from 'node:child_process';
+import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import os from 'node:os';
 import {
   monitorProcess,
@@ -10,7 +6,13 @@ import {
   runPhase,
   runWithRetry,
 } from './benchmark-utils.ts';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  readdirSync,
+  statSync,
+} from 'node:fs';
 import fse from 'fs-extra';
 import { createRequire } from 'module';
 import path from 'path';
@@ -101,6 +103,11 @@ interface Column {
 }
 
 const COOL_DOWN_TIME = 1000;
+const devTimingOnly = process.env.BENCHMARK_DEV_TIMING_ONLY === '1';
+const diagnostics = process.env.BENCHMARK_DIAGNOSTICS === '1';
+const measurements: Measurement[] = devTimingOnly
+  ? ['timing']
+  : ['timing', 'memory'];
 const defaultTimeouts = {
   startup: 60000,
   page: 60000,
@@ -522,7 +529,17 @@ const metadata = {
   browserIsolation: 'fresh context per development session',
   timeouts,
   maxAttempts: 2,
-  measurements: ['timing', 'memory'],
+  measurements,
+  devTimingOnly,
+  diagnostics,
+  persistenceMmap: process.env.TURBO_PERSISTENCE_MMAP ?? null,
+  diagnosticEnvironment: Object.fromEntries(
+    Object.entries(process.env).filter(([key]) =>
+      /^(TURBO_ENGINE_|TURBO_TASKS_AVAILABLE_PARALLELISM$|DISABLE_PERSISTENT_CACHE$|UTOO_ROOT_PATH$|NODE_OPTIONS$)/.test(
+        key,
+      ),
+    ),
+  ),
   warmupTimes,
   runTimes,
   node: process.version,
@@ -564,12 +581,38 @@ function saveRun(
       elapsedMs: Date.now() - command.started,
       error: command.error,
       exit: { code: command.child.exitCode, signal: command.child.signalCode },
-      ...(command.error
+      ...(diagnostics && phase.startsWith('dev-')
+        ? { diskCache: describeDiskCache() }
+        : {}),
+      ...(command.error || diagnostics
         ? { ...command.monitor.output, browserLog: command.browserLog }
         : {}),
       samples: command.memory?.samples,
     }),
   );
+}
+
+// Inspect metadata only, after shutdown; do not read or hash cache contents.
+function describeDiskCache() {
+  const files: { path: string; bytes: number }[] = [];
+  const visit = (directory: string) => {
+    if (!fse.existsSync(directory)) return;
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const filename = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(filename);
+      else if (entry.isFile())
+        files.push({
+          path: path.relative(monorepoRoot, filename),
+          bytes: statSync(filename).size,
+        });
+    }
+  };
+  for (const directory of [monorepoRoot, caseDir])
+    visit(path.join(directory, '.turbopack'));
+  return {
+    bytes: files.reduce((total, file) => total + file.bytes, 0),
+    files: files.sort((left, right) => left.path.localeCompare(right.path)),
+  };
 }
 
 async function commandPhase<T>(
@@ -741,6 +784,8 @@ async function runDevSession(
     succeeded: boolean;
     steady?: object;
     startupTime?: number;
+    serverReadyTime?: number;
+    pageReadyTime?: number;
     hmrTimes?: number[];
   };
   let onDisconnected: () => void;
@@ -878,7 +923,13 @@ async function runDevSession(
         `${buildTool.name} dev (${cache}, memory): steady ${(steady.bytes / 1024 ** 2).toFixed(1)} MiB, peak ${(peak / 1024 ** 2).toFixed(1)} MiB`,
       );
     } else {
-      details = { succeeded: false, startupTime, hmrTimes };
+      details = {
+        succeeded: false,
+        startupTime,
+        serverReadyTime: time,
+        pageReadyTime: startupTime - time,
+        hmrTimes,
+      };
       logger.success(
         `${buildTool.name} dev (${cache}, timing): ${startupTime}ms`,
       );
@@ -985,10 +1036,14 @@ async function benchAllCases(): Promise<void> {
 
   for (const buildTool of shuffledBuildTools) {
     ensureMetrics(perfResult, buildTool.name);
-    for (const measurement of ['timing', 'memory'] as const) {
+    for (const measurement of measurements) {
       if (measurement === 'memory' && iteration < warmupTimes) continue;
       logger.info(`${buildTool.name}: ${measurement} pass`);
-      for (const unit of runDev ? ['dev', 'build'] : ['build']) {
+      for (const unit of devTimingOnly
+        ? ['dev']
+        : runDev
+          ? ['dev', 'build']
+          : ['build']) {
         const context = { tool: buildTool.name, measurement, unit, iteration };
         const persistAttempts = () =>
           writeFileSync(
@@ -1163,7 +1218,9 @@ columnGroups.push({
   ],
 });
 
-let markdown = `Timing and memory are measured in separate passes.\n\nMemory: process-tree ${memoryKind}, MiB; median, natural GC.\n\n`;
+let markdown = devTimingOnly
+  ? 'Only development timing is measured.\n\n'
+  : `Timing and memory are measured in separate passes.\n\nMemory: process-tree ${memoryKind}, MiB; median, natural GC.\n\n`;
 const failures = attempts.filter((attempt) => !attempt.succeeded);
 if (failures.length) {
   markdown += `### Recovered after retry\n\n${failures.length} failed attempt(s); failed attempts are excluded from metrics.\n\n`;
@@ -1172,6 +1229,7 @@ if (failures.length) {
   markdown += '\n';
 }
 for (const { label, columns } of columnGroups) {
+  if (!columns.some((column) => column !== nameColumn && column.data)) continue;
   logger.log(`${label}:\n`);
   const table = buildMarkdownTable(columns);
   console.log(`${table}\n`);

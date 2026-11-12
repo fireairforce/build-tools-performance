@@ -1,0 +1,67 @@
+name: Utoo dev cache A/B
+run-name: Utoo dev cache A/B (${{ github.sha }})
+
+on:
+  push:
+    branches: [zoomdong/utoo-dev-cache-mmap-ab]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: ${{ matrix.case }} / ${{ matrix.order }}
+    runs-on: macos-15
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [react-1k, react-dashboard]
+        order: [ABBA, BAAB]
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      PUPPETEER_EXECUTABLE_PATH: '/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
+      CASE: ${{ matrix.case }}
+      AB_ORDER: ${{ matrix.order }}
+      AB_WARMUP_TIMES: '1'
+      AB_RUN_TIMES: '3'
+
+    steps:
+      - name: Checkout experiment
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Pnpm
+        run: npm i -g corepack@latest --force && corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24.22.1
+
+      - name: Install global wrapper
+        run: npm i cross-env -g
+
+      - name: Install fixed dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test memory sampler
+        run: pnpm test
+
+      - name: Compare cache access modes
+        run: node scripts/utoo-cache-ab.mjs
+
+      - name: Publish comparison
+        if: always()
+        run: |
+          for summary in results/*/ab-summary.md; do
+            if [ -f "$summary" ]; then cat "$summary" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+
+      - name: Upload raw samples and logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: utoo-cache-ab-${{ matrix.case }}-${{ matrix.order }}
+          path: results/
+          if-no-files-found: error
