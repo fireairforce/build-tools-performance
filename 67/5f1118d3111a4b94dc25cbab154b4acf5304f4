@@ -1,0 +1,26 @@
+scripts/benchmark.ts
+  s_371450ac90b92f::t_69719aaee9f06b 9-15,106-110,532-537,541-542,584-587,595-617,787-788,926-932,1039,1221-1223,1232
+  s_371450ac90b92f::t_0e777a471425fe 1,538-540,1042-1046
+.github/workflows/utoo-cache-ab.yml
+  s_371450ac90b92f::t_69719aaee9f06b 1-67
+scripts/utoo-cache-ab.mjs
+  s_371450ac90b92f::t_0e777a471425fe 78-81,84-85,88-91,121-128,135-137,140-142,145-150,156-161,163-164,176-178
+  s_371450ac90b92f::t_7faca7b6268fa1 143-144,151-152
+  s_371450ac90b92f::t_69719aaee9f06b 1-77,82-83,86-87,92-120,129-134,138-139,153-155,162,165-175,179-184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "675f1118d3111a4b94dc25cbab154b4acf5304f4",
+  "prompts": {},
+  "sessions": {
+    "s_371450ac90b92f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf11-36be-7d03-8f9a-adabee6e5b71",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "zoomdong <1344492820@qq.com>"
+    }
+  }
+}
