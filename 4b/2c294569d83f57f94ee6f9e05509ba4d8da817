@@ -1,0 +1,23 @@
+scripts/utoo-cache-ab.mjs
+  s_371450ac90b92f::t_1f327a2f90d067 33-36,166-171
+.github/workflows/utoo-cache-ab.yml
+  s_371450ac90b92f::t_76ee7286521ebe 1-2,6,29
+scripts/benchmark.ts
+  s_371450ac90b92f::t_76ee7286521ebe 108,536,671-687
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4b2c294569d83f57f94ee6f9e05509ba4d8da817",
+  "prompts": {},
+  "sessions": {
+    "s_371450ac90b92f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf11-36be-7d03-8f9a-adabee6e5b71",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "zoomdong <1344492820@qq.com>"
+    }
+  }
+}
