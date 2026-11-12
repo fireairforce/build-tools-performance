@@ -1,0 +1,33 @@
+scripts/process-shutdown.test.ts
+  s_371450ac90b92f::t_9c98f1ae284619 1-21,34,37-42,45-48,57-70,75-77,81,84-100,114-125,131-136,163-165
+  s_371450ac90b92f::t_ddb500bf66520d 22-33,35-36,43-44,49-56,71-74,78-80,82-83,101-113,126-130,137-162,166-204
+scripts/process-shutdown.ts
+  s_371450ac90b92f::t_9c98f1ae284619 1-74
+cases/react-dashboard/package.json
+  s_371450ac90b92f::t_0cdbd1b737f77d 57
+scripts/benchmark.ts
+  s_371450ac90b92f::t_68811c6fb58caf 1
+  s_371450ac90b92f::t_03529e265b7568 646-649,651
+  s_371450ac90b92f::t_fd0a52881ddad9 9,68,158-160,170-171,180-181,188-189,232-236,240-244,253,473-477,640-645,743-744,882-888
+package.json
+  s_371450ac90b92f::t_fd0a52881ddad9 8
+  s_371450ac90b92f::t_0cdbd1b737f77d 34
+pnpm-lock.yaml
+  s_371450ac90b92f::t_30ebb027965f85 239-240,636-637,5085-5086,5090-5091,5096-5097,5102-5103,5109-5110,5116-5117,5123-5124,5130-5131,5134-5135,5140-5141,15016,15018,15031,15034,15037,15040,15043,15046,15049,15054,15057,15063-15064,15076-15082
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e8abbd8e6fddb5eeef9e67a154d5cc11e2061893",
+  "prompts": {},
+  "sessions": {
+    "s_371450ac90b92f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf11-36be-7d03-8f9a-adabee6e5b71",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "zoomdong <1344492820@qq.com>"
+    }
+  }
+}
