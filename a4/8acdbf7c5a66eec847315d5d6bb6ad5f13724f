@@ -1,0 +1,23 @@
+cases/react-dashboard/package.json
+  s_371450ac90b92f::t_fb9bd5f17f5141 57
+package.json
+  s_371450ac90b92f::t_fb9bd5f17f5141 36
+pnpm-lock.yaml
+  s_371450ac90b92f::t_d04823922a0ec9 239-240,636-637,5507-5508,5512-5513,5518-5519,5524-5525,5531-5532,5538-5539,5545-5546,5552-5553,5556-5557,5562-5563,15754,15756,15769,15772,15775,15778,15781,15784,15787,15792,15795,15802,15814-15820
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a48acdbf7c5a66eec847315d5d6bb6ad5f13724f",
+  "prompts": {},
+  "sessions": {
+    "s_371450ac90b92f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf11-36be-7d03-8f9a-adabee6e5b71",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "zoomdong <1344492820@qq.com>"
+    }
+  }
+}
